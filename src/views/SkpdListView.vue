@@ -11,7 +11,7 @@ const auth = useAuthStore()
 
 const yearId = route.params.yearId
 const skpds = ref([])
-const filledMonths = ref({}) // { skpd_id: Set<month> }
+const filledMonths = ref({}) // { skpd_id: { PNS: Set<month>, PPPK: Set<month>, ... } }
 const loading = ref(false)
 
 const dialogVisible = ref(false)
@@ -30,13 +30,14 @@ async function loadData() {
       [yearId]
     )
     const filled = await db.select(
-      'SELECT skpd_id, month FROM salary_recap WHERE fiscal_year_id = ? GROUP BY skpd_id, month',
+      'SELECT skpd_id, month, employee_type FROM salary_recap WHERE fiscal_year_id = ?',
       [yearId]
     )
     const map = {}
     for (const row of filled) {
-      if (!map[row.skpd_id]) map[row.skpd_id] = new Set()
-      map[row.skpd_id].add(row.month)
+      if (!map[row.skpd_id]) map[row.skpd_id] = {}
+      if (!map[row.skpd_id][row.employee_type]) map[row.skpd_id][row.employee_type] = new Set()
+      map[row.skpd_id][row.employee_type].add(row.month)
     }
     filledMonths.value = map
   } finally {
@@ -44,12 +45,14 @@ async function loadData() {
   }
 }
 
-function isFilled(skpdId, month) {
-  return filledMonths.value[skpdId]?.has(month) ?? false
+const EMPLOYEE_TYPES = ['PNS', 'PPPK']
+
+function isFilled(skpdId, type, month) {
+  return filledMonths.value[skpdId]?.[type]?.has(month) ?? false
 }
 
-function filledCount(skpdId) {
-  return filledMonths.value[skpdId]?.size ?? 0
+function filledCount(skpdId, type) {
+  return filledMonths.value[skpdId]?.[type]?.size ?? 0
 }
 
 function openAdd() {
@@ -115,7 +118,7 @@ onMounted(loadData)
 </script>
 
 <template>
-  <div style="max-width: 1000px; margin: 40px auto;">
+  <div>
     <el-page-header @back="router.push(`/tahun/${yearId}`)">
       <template #content>Data SKPD</template>
     </el-page-header>
@@ -134,32 +137,37 @@ onMounted(loadData)
         <el-table-column type="index" label="No" width="55" />
         <el-table-column prop="kode" label="Kode" width="130" />
         <el-table-column prop="nama" label="Nama SKPD" min-width="200" />
-        <el-table-column label="Progress Bulan" min-width="260">
+        <el-table-column label="Progress Bulan" min-width="300">
           <template #default="{ row }">
-            <div style="display: flex; align-items: center; gap: 6px;">
-              <div style="display: flex; gap: 2px;">
-                <el-tooltip
-                  v-for="m in 12"
-                  :key="m"
-                  :content="MONTHS_SHORT[m-1]"
-                  placement="top"
-                >
-                  <span
-                    :style="{
-                      display: 'inline-block',
-                      width: '14px',
-                      height: '14px',
-                      borderRadius: '2px',
-                      background: isFilled(row.id, m) ? '#67c23a' : '#dcdfe6',
-                      cursor: 'pointer'
-                    }"
-                    @click="router.push(`/tahun/${yearId}/skpd/${row.id}?bulan=${m}`)"
-                  />
-                </el-tooltip>
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+              <div
+                v-for="type in EMPLOYEE_TYPES"
+                :key="type"
+                style="display: flex; align-items: center; gap: 6px;"
+              >
+                <span style="font-size: 11px; color: #909399; width: 30px; flex-shrink: 0;">{{ type }}</span>
+                <div style="display: flex; gap: 2px;">
+                  <el-tooltip
+                    v-for="m in 12"
+                    :key="m"
+                    :content="MONTHS_SHORT[m-1]"
+                    placement="top"
+                  >
+                    <span
+                      :style="{
+                        display: 'inline-block',
+                        width: '14px',
+                        height: '14px',
+                        borderRadius: '2px',
+                        background: isFilled(row.id, type, m) ? '#67c23a' : '#dcdfe6',
+                        cursor: 'pointer'
+                      }"
+                      @click.stop="router.push(`/tahun/${yearId}/skpd/${row.id}?bulan=${m}`)"
+                    />
+                  </el-tooltip>
+                </div>
+                <span style="font-size: 11px; color: #909399;">{{ filledCount(row.id, type) }}/12</span>
               </div>
-              <span style="font-size: 12px; color: #909399;">
-                {{ filledCount(row.id) }}/12
-              </span>
             </div>
           </template>
         </el-table-column>

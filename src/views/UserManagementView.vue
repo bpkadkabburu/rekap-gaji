@@ -112,7 +112,7 @@ onMounted(loadUsers)
 </script>
 
 <template>
-  <div style="max-width: 700px; margin: 40px auto;">
+  <div>
     <el-page-header @back="router.go(-1)">
       <template #content>Kelola User</template>
     </el-page-header>

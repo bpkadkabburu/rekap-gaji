@@ -23,7 +23,7 @@ function logout() {
         <el-button size="small" @click="logout">Logout</el-button>
       </div>
     </el-header>
-    <el-main style="background: #f0f2f5;">
+    <el-main style="background: #f0f2f5; padding: 24px 32px;">
       <router-view />
     </el-main>
   </el-container>

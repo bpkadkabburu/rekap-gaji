@@ -25,6 +25,12 @@ pub fn run() {
             sql: include_str!("../migrations/0001_initial.sql"),
             kind: tauri_plugin_sql::MigrationKind::Up,
         },
+        tauri_plugin_sql::Migration {
+            version: 2,
+            description: "sipd_pegawai",
+            sql: include_str!("../migrations/0002_sipd_pegawai.sql"),
+            kind: tauri_plugin_sql::MigrationKind::Up,
+        },
     ];
 
     tauri::Builder::default()

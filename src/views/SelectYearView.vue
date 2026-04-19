@@ -42,7 +42,7 @@ onMounted(loadYears)
 </script>
 
 <template>
-  <div style="max-width: 600px; margin: 40px auto;">
+  <div>
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
       <h2 style="font-size: 18px;">Pilih Tahun Anggaran</h2>
       <el-button v-if="auth.isSuperadmin" type="primary" @click="adding = true">

@@ -35,6 +35,23 @@ const routes = [
         component: () => import('../views/SalaryInputView.vue')
       },
       {
+        path: 'tahun/:yearId/sipd',
+        name: 'SipdUpload',
+        component: () => import('../views/SipdUploadView.vue'),
+        meta: { requiresSuperadmin: true }
+      },
+      {
+        path: 'tahun/:yearId/sipd/data',
+        name: 'SipdData',
+        component: () => import('../views/SipdDataView.vue'),
+        meta: { requiresSuperadmin: true }
+      },
+      {
+        path: 'tahun/:yearId/konsistensi',
+        name: 'Konsistensi',
+        component: () => import('../views/KonsistensiView.vue'),
+      },
+      {
         path: 'users',
         name: 'UserManagement',
         component: () => import('../views/UserManagementView.vue'),
