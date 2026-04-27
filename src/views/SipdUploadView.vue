@@ -11,6 +11,7 @@ const router = useRouter()
 const auth = useAuthStore()
 
 const yearId = Number(route.params.yearId)
+const currentYear = ref('')
 
 const skpds = ref([])
 const loading = ref(false)
@@ -21,7 +22,7 @@ const selectedMonth = ref(null)
 const parsedRows = ref([])
 const fileName = ref('')
 
-const MONTHS = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember']
+const MONTHS = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember','THR','Gaji 13']
 
 const STATUS_ASN = { 1: 'PNS', 2: 'PPPK', 3: 'CPNS' }
 const TIPE_JABATAN = { 1: 'Struktural', 2: 'Fungsional', 3: 'Fungsional Umum' }
@@ -68,6 +69,8 @@ async function loadSkpds() {
       'SELECT * FROM skpds WHERE fiscal_year_id = ? ORDER BY kode ASC',
       [yearId]
     )
+    const fy = await db.select('SELECT year FROM fiscal_years WHERE id = ?', [yearId])
+    if (fy.length) currentYear.value = fy[0].year
   } finally {
     loading.value = false
   }
@@ -168,7 +171,7 @@ onMounted(loadSkpds)
 <template>
   <div>
     <el-page-header @back="router.push(`/tahun/${yearId}`)">
-      <template #content>Upload Data SIPD — Tahun {{ yearId }}</template>
+      <template #content>Upload Data SIPD — Tahun {{ currentYear }}</template>
     </el-page-header>
 
     <el-card style="margin-top: 24px;">

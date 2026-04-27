@@ -7,6 +7,7 @@ const route = useRoute()
 const router = useRouter()
 
 const yearId = Number(route.params.yearId)
+const currentYear = ref('')
 
 const filterMonth = ref(null)
 const skpds = ref([])
@@ -14,7 +15,7 @@ const manualData = ref({})  // { skpd_id: { PNS: {...}, PPPK: {...} } }
 const sipdData = ref({})    // { skpd_id: { PNS: {...}, PPPK: {...}, CPNS: {...} } }
 const loading = ref(false)
 
-const MONTHS = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember']
+const MONTHS = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember','THR','Gaji 13']
 const TYPES = ['PNS', 'PPPK']
 
 const COLUMNS = [
@@ -96,6 +97,8 @@ async function loadSkpds() {
     'SELECT * FROM skpds WHERE fiscal_year_id = ? ORDER BY kode ASC',
     [yearId]
   )
+  const fy = await db.select('SELECT year FROM fiscal_years WHERE id = ?', [yearId])
+  if (fy.length) currentYear.value = fy[0].year
 }
 
 async function loadData() {
@@ -180,7 +183,7 @@ async function onMonthChange() {
 <template>
   <div>
     <el-page-header @back="router.push(`/tahun/${yearId}`)">
-      <template #content>Konsistensi Data — Tahun {{ yearId }}</template>
+      <template #content>Konsistensi Data — Tahun {{ currentYear }}</template>
     </el-page-header>
 
     <!-- Filter -->

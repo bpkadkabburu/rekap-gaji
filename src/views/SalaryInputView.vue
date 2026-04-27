@@ -21,7 +21,8 @@ const activeTab = ref('PNS')
 const selectedMonth = ref(null)
 const saving = ref(false)
 
-const MONTHS = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember']
+const MONTHS = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember','THR','Gaji 13']
+const TOTAL_PERIODS = 14
 
 const EMPLOYEE_TYPES = computed(() => {
   const types = ['PNS', 'PPPK']
@@ -125,6 +126,7 @@ async function saveMonth() {
     filledData.value = map
 
     ElMessage.success(`Data ${type} ${MONTHS[selectedMonth.value - 1]} berhasil disimpan`)
+
   } catch (e) {
     ElMessage.error('Gagal menyimpan: ' + e)
   } finally {
@@ -174,7 +176,7 @@ function getCurrencyDisplay(val) {
 }
 
 function filledCount(type) {
-  return Array.from({ length: 12 }, (_, i) => i + 1)
+  return Array.from({ length: TOTAL_PERIODS }, (_, i) => i + 1)
     .filter(m => filledData.value[`${m}_${type}`]).length
 }
 
@@ -182,7 +184,7 @@ function filledCount(type) {
 onMounted(async () => {
   await loadData()
   const bulan = Number(route.query.bulan)
-  if (bulan >= 1 && bulan <= 12) openMonth(bulan)
+  if (bulan >= 1 && bulan <= TOTAL_PERIODS) openMonth(bulan)
 })
 </script>
 
@@ -205,11 +207,11 @@ onMounted(async () => {
         >
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
             <span style="font-weight: 600; font-size: 13px;">{{ type === 'KDH_WKDH' ? 'KDH/WKDH' : type }}</span>
-            <span style="font-size: 13px; color: #606266;">{{ filledCount(type) }}/12 bulan</span>
+            <span style="font-size: 13px; color: #606266;">{{ filledCount(type) }}/{{ TOTAL_PERIODS }}</span>
           </div>
           <el-progress
-            :percentage="Math.round(filledCount(type) / 12 * 100)"
-            :status="filledCount(type) === 12 ? 'success' : ''"
+            :percentage="Math.round(filledCount(type) / TOTAL_PERIODS * 100)"
+            :status="filledCount(type) === TOTAL_PERIODS ? 'success' : ''"
             :stroke-width="8"
             :show-text="false"
           />
@@ -218,7 +220,7 @@ onMounted(async () => {
 
       <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;">
         <el-card
-          v-for="m in 12"
+          v-for="m in TOTAL_PERIODS"
           :key="m"
           shadow="hover"
           style="cursor: pointer;"
@@ -246,7 +248,7 @@ onMounted(async () => {
     <!-- Dialog Form Input -->
     <el-dialog
       v-model="dialogVisible"
-      :title="`${MONTHS[selectedMonth - 1]} — ${skpd?.nama ?? ''}`"
+      :title="`${MONTHS[(selectedMonth ?? 1) - 1]} — ${skpd?.nama ?? ''}`"
       width="680px"
       destroy-on-close
     >

@@ -1,16 +1,27 @@
 <script setup>
+import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
+import { getDb } from '../utils/db'
 
 const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
+
+const yearId = route.params.yearId
+const currentYear = ref('')
+
+onMounted(async () => {
+  const db = await getDb()
+  const rows = await db.select('SELECT year FROM fiscal_years WHERE id = ?', [yearId])
+  if (rows.length) currentYear.value = rows[0].year
+})
 </script>
 
 <template>
   <div>
     <el-page-header @back="router.push('/')">
-      <template #content>Tahun {{ route.params.yearId }}</template>
+      <template #content>Tahun {{ currentYear }}</template>
     </el-page-header>
     <div style="margin-top: 24px; display: flex; gap: 16px; flex-wrap: wrap;">
       <el-card

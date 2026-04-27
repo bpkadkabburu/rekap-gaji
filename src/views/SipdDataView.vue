@@ -7,6 +7,7 @@ const route = useRoute()
 const router = useRouter()
 
 const yearId = Number(route.params.yearId)
+const currentYear = ref('')
 
 const skpds = ref([])
 const rows = ref([])
@@ -20,7 +21,7 @@ const search = ref('')
 const currentPage = ref(1)
 const pageSize = ref(50)
 
-const MONTHS = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember']
+const MONTHS = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember','THR','Gaji 13']
 const STATUS_ASN = { 1: 'PNS', 2: 'PPPK', 3: 'CPNS' }
 const TIPE_JABATAN = { 1: 'Struktural', 2: 'Fungsional', 3: 'Fungsional Umum' }
 const STATUS_NIKAH = { 1: 'Menikah', 2: 'Belum/Cerai' }
@@ -51,6 +52,8 @@ async function loadSkpds() {
     'SELECT * FROM skpds WHERE fiscal_year_id = ? ORDER BY kode ASC',
     [yearId]
   )
+  const fy = await db.select('SELECT year FROM fiscal_years WHERE id = ?', [yearId])
+  if (fy.length) currentYear.value = fy[0].year
 }
 
 async function loadData() {
@@ -94,7 +97,7 @@ onMounted(async () => {
 <template>
   <div>
     <el-page-header @back="router.push(`/tahun/${yearId}`)">
-      <template #content>Data SIPD Pegawai — Tahun {{ yearId }}</template>
+      <template #content>Data SIPD Pegawai — Tahun {{ currentYear }}</template>
       <template #extra>
         <el-button type="primary" @click="router.push(`/tahun/${yearId}/sipd`)">
           Upload Data Baru
