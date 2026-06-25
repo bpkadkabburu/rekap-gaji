@@ -4,7 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { getDb } from '../utils/db'
 import { ElMessage } from 'element-plus'
-import * as XLSX from 'xlsx'
+import ExcelJS from 'exceljs'
 
 const route = useRoute()
 const router = useRouter()
@@ -76,6 +76,18 @@ async function loadSkpds() {
   }
 }
 
+function toCellValue(v) {
+  if (v === null || v === undefined) return ''
+  if (v instanceof Date) {
+    const d = String(v.getDate()).padStart(2, '0')
+    const m = String(v.getMonth() + 1).padStart(2, '0')
+    return `${d}/${m}/${v.getFullYear()}`
+  }
+  if (typeof v === 'object' && v.richText) return v.richText.map(r => r.text).join('')
+  if (typeof v === 'object' && v.result !== undefined) return v.result
+  return v
+}
+
 function handleFileChange(uploadFile) {
   const file = uploadFile.raw
   if (!file) return
@@ -83,11 +95,17 @@ function handleFileChange(uploadFile) {
   parsedRows.value = []
 
   const reader = new FileReader()
-  reader.onload = (e) => {
+  reader.onload = async (e) => {
     try {
-      const wb = XLSX.read(e.target.result, { type: 'array' })
-      const ws = wb.Sheets[wb.SheetNames[0]]
-      const raw = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' })
+      const workbook = new ExcelJS.Workbook()
+      await workbook.xlsx.load(e.target.result)
+      const ws = workbook.worksheets[0]
+
+      const raw = []
+      ws.eachRow({ includeEmpty: true }, (row) => {
+        const len = Math.max(row.cellCount, COLUMN_MAP.length)
+        raw.push(Array.from({ length: len }, (_, i) => toCellValue(row.getCell(i + 1).value)))
+      })
 
       // Cari baris header (yang ada "NIP" atau "Nama") — skip baris keterangan di atas
       let dataStartRow = 0

@@ -4,7 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { getDb } from '../utils/db'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import * as XLSX from 'xlsx'
+import ExcelJS from 'exceljs'
 
 const route = useRoute()
 const router = useRouter()
@@ -140,13 +140,26 @@ function openUploadDialog() {
   uploadDialogVisible.value = true
 }
 
+function toCellValue(v) {
+  if (v === null || v === undefined) return ''
+  if (v instanceof Date) return v.toISOString()
+  if (typeof v === 'object' && v.richText) return v.richText.map(r => r.text).join('')
+  if (typeof v === 'object' && v.result !== undefined) return v.result
+  return v
+}
+
 function handleExcelFile(file) {
   const reader = new FileReader()
-  reader.onload = (e) => {
+  reader.onload = async (e) => {
     try {
-      const wb = XLSX.read(e.target.result, { type: 'array' })
-      const ws = wb.Sheets[wb.SheetNames[0]]
-      const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' })
+      const workbook = new ExcelJS.Workbook()
+      await workbook.xlsx.load(e.target.result)
+      const ws = workbook.worksheets[0]
+
+      const rows = []
+      ws.eachRow({ includeEmpty: true }, (row) => {
+        rows.push(Array.from({ length: row.cellCount }, (_, i) => toCellValue(row.getCell(i + 1).value)))
+      })
 
       if (rows.length === 0) {
         ElMessage.error('File Excel kosong')
